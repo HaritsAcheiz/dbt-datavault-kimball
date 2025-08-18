@@ -1,0 +1,96 @@
+version: 2
+
+sources:
+  - name: flights_staging
+    database: demo
+    schema: bookings
+    tables:
+      - name: flights
+        columns:
+          - name: flight_id
+          - name: flight_no
+          - name: scheduled_departure
+          - name: scheduled_arrival
+          - name: departure_airport
+          - name: arrival_airport
+          - name: status
+          - name: aircraft_code
+          - name: actual_departure
+          - name: actual_arrival
+      - name: airports_data
+        columns:
+          - name: airport_code
+          - name: airport_name
+          - name: city
+          - name: coordinates
+          - name: timezone
+      - name: tickets
+        columns:
+          - name: ticket_no
+          - name: booking_ref
+          - name: passenger_id
+          - name: passenger_name
+          - name: contact_data
+
+models:
+  - name: dim_airports
+    description: "A dimension table containing information about airports in the Kimball model."
+    columns:
+      - name: airport_sk
+        tests:
+          - unique
+          - not_null
+      - name: airport_code
+      - name: airport_name
+      - name: city
+
+  - name: fct_flights
+    description: "A fact table containing metrics and keys for flights in the Kimball model."
+    columns:
+      - name: flight_id
+        tests:
+          - unique
+          - not_null
+      - name: scheduled_departure
+      - name: scheduled_arrival
+      - name: status
+      - name: departure_airport_sk
+      - name: arrival_airport_sk
+
+  - name: hub_airport
+    description: "A Hub table storing unique airport business keys in the Data Vault model."
+    columns:
+      - name: airport_pk
+        tests:
+          - unique
+          - not_null
+      - name: airport_nk
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+
+  - name: sat_airport
+    description: "A Satellite table containing descriptive attributes for airports in the Data Vault model."
+    columns:
+      - name: airport_pk
+        tests:
+          - not_null
+      - name: airport_name
+      - name: city
+      - name: load_dts
+
+  - name: link_flights
+    description: "A Link table defining the relationship between flights and airports in the Data Vault model."
+    columns:
+      - name: flight_pk
+        tests:
+          - unique
+          - not_null
+      - name: departure_airport_pk
+        tests:
+          - not_null
+      - name: arrival_airport_pk
+        tests:
+          - not_null
+      - name: load_dts
