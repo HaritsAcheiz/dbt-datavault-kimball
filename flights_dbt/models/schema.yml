@@ -24,13 +24,12 @@ sources:
           - name: city
           - name: coordinates
           - name: timezone
-      - name: tickets
+      - name: ticket_flights
         columns:
           - name: ticket_no
-          - name: booking_ref
-          - name: passenger_id
-          - name: passenger_name
-          - name: contact_data
+          - name: flight_id
+          - name: fare_conditions
+          - name: amount
 
 models:
   - name: dim_airports
@@ -41,8 +40,20 @@ models:
           - unique
           - not_null
       - name: airport_code
+        tests:
+          - not_null
       - name: airport_name
+        tests:
+          - unique
       - name: city
+        tests:
+          - not_null
+      - name: coordinates
+        tests:
+          - not_null
+      - name: timezone
+        tests:
+          - not_null
 
   - name: fct_flights
     description: "A fact table containing metrics and keys for flights in the Kimball model."
@@ -51,11 +62,62 @@ models:
         tests:
           - unique
           - not_null
+      - name: flight_no
+        tests:
+          - not_null
       - name: scheduled_departure
+        tests:
+          - not_null
       - name: scheduled_arrival
+        tests:
+          - not_null
       - name: status
+      - name: aircraft_code
+      - name: actual_departure
+      - name: actual_arrival
       - name: departure_airport_sk
       - name: arrival_airport_sk
+
+  - name: new_fct_flights
+    description: "A new fact table at the ticket grain, combining flight and ticket data."
+    columns:
+      - name: ticket_id
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
+        tests:
+          - not_null
+      - name: flight_no
+        tests:
+          - not_null
+      - name: scheduled_departure
+        tests:
+          - not_null
+      - name: scheduled_arrival
+        tests:
+          - not_null
+      - name: status
+      - name: aircraft_code
+      - name: actual_departure
+      - name: actual_arrival
+      - name: departure_airport_sk
+      - name: arrival_airport_sk
+      - name: fare_conditions
+      - name: amount 
+
+  - name: fct_tickets
+    description: "A fact table containing metrics and keys for tickets in the Kimball model."
+    columns:
+      - name: ticket_no
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
+        tests:
+          - not_null
+      - name: fare_conditions
+      - name: amount
 
   - name: hub_airport
     description: "A Hub table storing unique airport business keys in the Data Vault model."
@@ -64,23 +126,83 @@ models:
         tests:
           - unique
           - not_null
-      - name: airport_nk
+      - name: airport_code
         tests:
           - unique
           - not_null
       - name: load_dts
+      - name: record_source
 
   - name: sat_airport
     description: "A Satellite table containing descriptive attributes for airports in the Data Vault model."
     columns:
       - name: airport_pk
         tests:
+          - unique
           - not_null
       - name: airport_name
+        tests:
+          - not_null
       - name: city
+        tests:
+          - not_null
+      - name: coordinates
+        tests:
+          - not_null
+      - name: timezone
+        tests:
+          - not_null
       - name: load_dts
+      - name: record_source
 
-  - name: link_flights
+  - name: hub_flights
+    description: "A Hub table storing unique airport business keys in the Data Vault model."
+    columns:
+      - name: airport_pk
+        tests:
+          - unique
+          - not_null
+      - name: airport_code
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+      - name: record_source
+
+  - name: sat_flights
+    description: "A Satellite table containing descriptive attributes for flights in the Data Vault model."
+    columns:
+      - name: flight_pk
+        tests:
+          - unique
+          - not_null
+      - name: flight_id
+        tests:
+          - unique
+          - not_null
+      - name: flight_no
+        tests:
+          - not_null
+      - name: schedule_departure
+        tests:
+          - not_null
+      - name: schedule_arrival
+        tests:
+          - not_null
+      - name: departure_airport
+        tests:
+          - not_null
+      - name: arrival_airport
+        tests:
+          - not_null
+      - name: status
+      - name: aircraft_code
+      - name: actual_departure
+      - name: actual_arrival
+      - name: load_dts
+      - name: record_source
+
+  - name: link_flights_airport
     description: "A Link table defining the relationship between flights and airports in the Data Vault model."
     columns:
       - name: flight_pk
@@ -94,3 +216,46 @@ models:
         tests:
           - not_null
       - name: load_dts
+      - name: record_source
+
+  - name: hub_tickets
+    description: "A Hub table storing unique ticket business keys in the Data Vault model."
+    columns:
+      - name: ticket_pk
+        tests:
+          - unique
+          - not_null
+      - name: ticket_no
+        tests:
+          - unique
+          - not_null
+      - name: load_dts
+      - name: record_source
+  
+  - name: sat_tickets
+    description: "A Satellite table containing descriptive attributes for tickets in the Data Vault model."
+    columns:
+      - name: ticket_pk
+        tests:
+          - unique
+          - not_null
+      - name: fare_conditions
+      - name: amount
+      - name: load_dts
+      - name: record_source
+  
+  - name: link_ticket_flights
+    description: "A Link table defining the relationship between tickets and flights in the Data Vault model."
+    columns:
+      - name: ticket_flights_pk
+        tests:
+          - unique
+          - not_null
+      - name: ticket_pk
+        tests:
+          - not_null
+      - name: flights_pk
+        tests:
+          - not_null
+      - name: load_dts
+      - name: record_source

@@ -33,8 +33,16 @@ models:
   flights_dbt:
     # Config indicated by + and applies to all files under models/example/
     kimball:
-      +materialized: table
-      +schema: integration
+      integration:
+        +materialized: table
+        +schema: kimball_integration
+      presentation:
+        +materialized: table
+        +schema: kimball_presentation
     data_vault:
-      +materialized: table
-      +schema: dv_raw
+      raw:
+        +materialized: table
+        +schema: dv_raw
+      presentation:
+        +materialized: table
+        +schema: dv_presentation

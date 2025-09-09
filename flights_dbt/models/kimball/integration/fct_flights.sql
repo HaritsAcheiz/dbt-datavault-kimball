@@ -13,9 +13,13 @@ airports as (
 
 select
     f.flight_id,
+    f.flight_no,
     f.scheduled_departure,
     f.scheduled_arrival,
     f.status,
+    f.aircraft_code,
+    f.actual_departure,
+    f.actual_arrival,
     -- Join to the airport dimension to get surrogate keys
     dep_airport.airport_sk as departure_airport_sk,
     arr_airport.airport_sk as arrival_airport_sk

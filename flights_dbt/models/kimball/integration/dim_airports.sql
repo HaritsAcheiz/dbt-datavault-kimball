@@ -12,6 +12,8 @@ select
   {{ dbt_utils.generate_surrogate_key(['airport_code']) }} as airport_sk,
   airport_code,
   airport_name,
-  city
+  city,
+  coordinates,
+  timezone
 from
   source
