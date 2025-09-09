@@ -32,5 +32,17 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   flights_dbt:
     # Config indicated by + and applies to all files under models/example/
-    example:
-      +materialized: view
+    kimball:
+      integration:
+        +materialized: table
+        +schema: kimball_integration
+      presentation:
+        +materialized: table
+        +schema: kimball_presentation
+    data_vault:
+      raw:
+        +materialized: table
+        +schema: dv_raw
+      presentation:
+        +materialized: table
+        +schema: dv_presentation
