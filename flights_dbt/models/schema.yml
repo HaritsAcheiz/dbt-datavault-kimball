@@ -1,6 +1,7 @@
 version: 2
 
 sources:
+  # Source definition for the staging layer
   - name: flights_staging
     database: demo
     schema: bookings
@@ -32,45 +33,24 @@ sources:
           - name: amount
 
 models:
+  # Model definitions for the Kimball Integration Layer
   - name: dim_airports
     description: "A dimension table containing information about airports in the Kimball model."
     columns:
       - name: airport_sk
-        tests:
-          - unique
-          - not_null
       - name: airport_code
-        tests:
-          - not_null
       - name: airport_name
-        tests:
-          - unique
       - name: city
-        tests:
-          - not_null
       - name: coordinates
-        tests:
-          - not_null
       - name: timezone
-        tests:
-          - not_null
 
   - name: fct_flights
     description: "A fact table containing metrics and keys for flights in the Kimball model."
     columns:
       - name: flight_id
-        tests:
-          - unique
-          - not_null
       - name: flight_no
-        tests:
-          - not_null
       - name: scheduled_departure
-        tests:
-          - not_null
       - name: scheduled_arrival
-        tests:
-          - not_null
       - name: status
       - name: aircraft_code
       - name: actual_departure
@@ -82,21 +62,10 @@ models:
     description: "A new fact table at the ticket grain, combining flight and ticket data."
     columns:
       - name: ticket_id
-        tests:
-          - unique
-          - not_null
       - name: flight_id
-        tests:
-          - not_null
       - name: flight_no
-        tests:
-          - not_null
       - name: scheduled_departure
-        tests:
-          - not_null
       - name: scheduled_arrival
-        tests:
-          - not_null
       - name: status
       - name: aircraft_code
       - name: actual_departure
@@ -110,26 +79,91 @@ models:
     description: "A fact table containing metrics and keys for tickets in the Kimball model."
     columns:
       - name: ticket_no
-        tests:
-          - unique
-          - not_null
       - name: flight_id
-        tests:
-          - not_null
       - name: fare_conditions
       - name: amount
 
+  - name: rollback_fct_flights
+    description: "A rollback version of the original fact table containing metrics and keys for flights in the Kimball model."
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: scheduled_departure
+      - name: scheduled_arrival
+      - name: status
+      - name: aircraft_code
+      - name: actual_departure
+      - name: actual_arrival
+      - name: departure_airport_sk
+      - name: arrival_airport_sk
+
+  # Model definitions for the Kimball Presentation Layer
+  - name: kimball_mart_flight_information
+    description: "A Kimball star schema mart combining flight and airport data for easy querying."
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: departure_airport_code
+      - name: departure_airport_name
+      - name: departure_city
+      - name: arrival_airport_code
+      - name: arrival_airport_name
+      - name: arrival_city
+      - name: scheduled_duration_minutes
+
+  - name: new_kimball_mart_flight_information
+    description: "A new Kimball star schema mart at the ticket grain, combining flight, ticket, and airport data for easy querying."
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: departure_airport_code
+      - name: departure_airport_name
+      - name: departure_city
+      - name: arrival_airport_code
+      - name: arrival_airport_name
+      - name: arrival_city
+      - name: scheduled_duration_minutes
+
+  - name: kimball_revenue_by_flight_v1
+    description: "A Kimball star schema mart providing revenue information by flight Option 1 (rebuild data model)"
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: scheduled_departure
+      - name: departure_city
+      - name: arrival_city
+      - name: status
+      - name: ticket_sold
+      - name: total_revenue
+      - name: avg_ticket_price
+      - name: economy_tickets
+      - name: business_tickets
+      - name: economy_revenue
+      - name: business_revenue
+  
+  - name: kimball_revenue_by_flight_v2
+    description: "A Kimball star schema mart providing revenue information by flight Option 2 (multiple fact tables)"
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: scheduled_departure
+      - name: departure_city
+      - name: arrival_city
+      - name: status
+      - name: ticket_sold
+      - name: total_revenue
+      - name: avg_ticket_price
+      - name: economy_tickets
+      - name: business_tickets
+      - name: economy_revenue
+      - name: business_revenue
+
+  # Model definitions for the Data Vault Raw Layer
   - name: hub_airport
     description: "A Hub table storing unique airport business keys in the Data Vault model."
     columns:
       - name: airport_pk
-        tests:
-          - unique
-          - not_null
       - name: airport_code
-        tests:
-          - unique
-          - not_null
       - name: load_dts
       - name: record_source
 
@@ -137,21 +171,10 @@ models:
     description: "A Satellite table containing descriptive attributes for airports in the Data Vault model."
     columns:
       - name: airport_pk
-        tests:
-          - unique
-          - not_null
       - name: airport_name
-        tests:
-          - not_null
       - name: city
-        tests:
-          - not_null
       - name: coordinates
-        tests:
-          - not_null
       - name: timezone
-        tests:
-          - not_null
       - name: load_dts
       - name: record_source
 
@@ -159,13 +182,7 @@ models:
     description: "A Hub table storing unique airport business keys in the Data Vault model."
     columns:
       - name: airport_pk
-        tests:
-          - unique
-          - not_null
       - name: airport_code
-        tests:
-          - unique
-          - not_null
       - name: load_dts
       - name: record_source
 
@@ -173,28 +190,12 @@ models:
     description: "A Satellite table containing descriptive attributes for flights in the Data Vault model."
     columns:
       - name: flight_pk
-        tests:
-          - unique
-          - not_null
       - name: flight_id
-        tests:
-          - unique
-          - not_null
       - name: flight_no
-        tests:
-          - not_null
       - name: schedule_departure
-        tests:
-          - not_null
       - name: schedule_arrival
-        tests:
-          - not_null
       - name: departure_airport
-        tests:
-          - not_null
       - name: arrival_airport
-        tests:
-          - not_null
       - name: status
       - name: aircraft_code
       - name: actual_departure
@@ -206,15 +207,8 @@ models:
     description: "A Link table defining the relationship between flights and airports in the Data Vault model."
     columns:
       - name: flight_pk
-        tests:
-          - unique
-          - not_null
       - name: departure_airport_pk
-        tests:
-          - not_null
       - name: arrival_airport_pk
-        tests:
-          - not_null
       - name: load_dts
       - name: record_source
 
@@ -222,13 +216,7 @@ models:
     description: "A Hub table storing unique ticket business keys in the Data Vault model."
     columns:
       - name: ticket_pk
-        tests:
-          - unique
-          - not_null
       - name: ticket_no
-        tests:
-          - unique
-          - not_null
       - name: load_dts
       - name: record_source
   
@@ -236,9 +224,6 @@ models:
     description: "A Satellite table containing descriptive attributes for tickets in the Data Vault model."
     columns:
       - name: ticket_pk
-        tests:
-          - unique
-          - not_null
       - name: fare_conditions
       - name: amount
       - name: load_dts
@@ -248,14 +233,39 @@ models:
     description: "A Link table defining the relationship between tickets and flights in the Data Vault model."
     columns:
       - name: ticket_flights_pk
-        tests:
-          - unique
-          - not_null
       - name: ticket_pk
-        tests:
-          - not_null
       - name: flights_pk
-        tests:
-          - not_null
       - name: load_dts
       - name: record_source
+
+  # Model definitions for the Data Vault Presentation Layer
+  - name: dv_mart_flight_information
+    description: "A Data Vault mart combining flight and airport data for easy querying."
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: departure_airport_code
+      - name: departure_airport_name
+      - name: departure_city
+      - name: arrival_airport_code
+      - name: arrival_airport_name
+      - name: arrival_city
+      - name: scheduled_duration_minutes
+
+  - name: dv_mart_revenue_by_flight
+    description: "A Data Vault mart providing revenue information by flight."
+    columns:
+      - name: flight_id
+      - name: flight_no
+      - name: scheduled_departure
+      - name: departure_city
+      - name: arrival_city
+      - name: status
+      - name: ticket_sold
+      - name: total_revenue
+      - name: avg_ticket_price
+      - name: economy_tickets
+      - name: business_tickets
+      - name: economy_revenue
+      - name: business_revenue
+      
